@@ -1,12 +1,15 @@
+ 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 # Create your models here.
+
+# We extend User class using AbstractUser from Django
 class User(AbstractUser):
     # All of the variables below are configured through AbstractUser
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    # each user should have a unique email
+    # each user should have a unique email so we set that to True
     email = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
     # username is a field abstractuser has and we don't want to log in using username, we want to log in using email
