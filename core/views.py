@@ -6,8 +6,11 @@ from rest_framework import exceptions
 # APIView to return the request as a view
 from rest_framework.views import APIView
 
-# Find out what the code below is doing
+# Response object that takes unrendered content and uses content negotiation to determine the correct content type 
+# to return to the client
 from rest_framework.response import Response
+
+from core.authentication import create_access_token
 
 from .serializers import UserSerializer
 
@@ -60,17 +63,32 @@ class LoginAPIView(APIView):
 
         # ISSUE BELOW, (WHEN I CHECK TO GET THE BOOLEAN IT IS NOT CORRECT)
         # If the email is correct, now we check the password (We use a built in function check_password)
-        if not user.check_password(password):
-            raise exceptions.AuthenticationFailed(f"password: {password}")
+        # if not user.check_password(password):
+        #     raise exceptions.AuthenticationFailed(f"password: {password}")
         
         if password != user.password:
             raise exceptions.AuthenticationFailed("Invalid Password")
         
-        # We serialize the User (create)
-        serializer = UserSerializer(user)
+        # Once we get email and password we create an access token and refresh token
+        access_token = create_access_token(user.id)
+        refresh_token = create_access_token(user.id)
 
-        # We return the data so we can see it
-        return Response(serializer.data)
+        # Returns will be different (create a variable)
+        response = Response()
+
+        # access token will appear in the body | refresh token will appear in cookies
+        # httponly=True is important since it allows our frontend to access the cookie, not just the back end
+        response.set_cookie(key='refresh_token', value=refresh_token, httponly=True)
+        response.data = {
+            'token': access_token
+        }
+    
+        # # We serialize the User (create)
+        # serializer = UserSerializer(user)
+
+        # # We return the data so we can see it
+        # return Response(serializer.data)
  
+        return response
 
     

@@ -12,9 +12,9 @@ class User(AbstractUser):
     # each user should have a unique email so we set that to True
     email = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
-    # username is a field abstractuser has and we don't want to log in using username, we want to log in using email
+    # username is a field abstractuser and we don't want to log in using username, we want to log in using email
     username = None
 
-    # then we set the username_field equal to email
+    # then we set the username_field equal to email (Specifies which model field is going to be used as the username)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
