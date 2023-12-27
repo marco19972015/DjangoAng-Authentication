@@ -39,12 +39,20 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # These two things are installed (required to use the REST framework functionalities)
     'rest_framework',
+
+    'corsheaders',
+
     'core'
 ]
 
+# Middlewares will stand between request. Placing line 54 places CORS to every
+# request that we make
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -129,3 +137,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # with this we say the default user is the core model user
 AUTH_USER_MODEL = 'core.User'
+ 
+# We need to add two constants in the end
+# The first one will allows any frontend port to access our server side port (any port)
+CORS_ORIGIN_ALLOW_ALL = True
+
+# Allows us to get both the access token and the refresh token located in cookies (in client side)
+CORS_ALLOW_CREDENTIALS = True
