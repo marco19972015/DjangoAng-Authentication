@@ -11,9 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 
-from rest_framework.authentication import get_authorization_header
-
-from core.authentication import create_access_token, decode_access_token
+from core.authentication import JWTAuthentication, create_access_token
 
 from .serializers import UserSerializer
 
@@ -96,27 +94,10 @@ class LoginAPIView(APIView):
 
 # Create the UserAPIView and have the APIView extend from it
 class UserAPIView(APIView):
-    # Create the get request method
+    # adding it on top means it will be a middleware
+    # we will in authentication.py ->
+    authentication_classes = [JWTAuthentication]
+
     def get(self, request):
-        # Below we want to send the access token view the headers
-        # pass
-        # To get the access token we assign get_authorization_header to auth variable
-        auth = get_authorization_header(request).split()
-
-        # Add an if condition where if auth is sent and the len is 2 then do the following
-        if auth and len(auth) == 2:
-            # Then we want to get the decoded token
-            token = auth[1].decode('utf-8')
-            
-            # pass the unicode token to the decode function
-            id = decode_access_token(token)
-
-            user = User.objects.get(pk=id)
-        
-            if user:
-                serializer = UserSerializer(user)
-                return Response(serializer.data)
-            
-        raise exceptions.AuthenticationFailed('unauthenticated') 
-      
-    
+        return Response(UserSerializer(request.user).data)
+       
