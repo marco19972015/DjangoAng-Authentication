@@ -1,6 +1,7 @@
 # JWT is the industry standard method for representing claims securely between two parties
 # a compact and self-contained way for securely transmitting information between parties as a JSON object
 import jwt, datetime
+from rest_framework import exceptions
 
 
 # The access token needs to access our end points, but it will also have to expire.
@@ -15,6 +16,17 @@ def create_access_token(id):
         # Creation time
         'iat': datetime.datetime.utcnow()
     }, 'access_secret', algorithm='HS256')
+
+
+def decode_access_token(token):
+    try:
+        payload = jwt.decode(token, 'access_secret', algorithms='HS256')
+        return payload['user_id']
+    
+    except Exception as e:
+        print(e)
+        raise exceptions.AuthenticationFailed('unauthenticated')
+
 
 def create_refresh_token(id):
     return jwt.encode({
