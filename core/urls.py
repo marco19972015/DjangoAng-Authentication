@@ -1,6 +1,6 @@
 # When we hit the api path (located in app folder under urls.py) we get taken to this urls.py unser core folder app
 from django.urls import path
-from .views import RegisterAPIView, LoginAPIView, UserAPIView
+from .views import RegisterAPIView, LoginAPIView, UserAPIView, RefreshAPIView
 
 urlpatterns = [
     # Remember, the first argument is the endpoint
@@ -9,4 +9,5 @@ urlpatterns = [
     path('register', RegisterAPIView.as_view()),  # FIRST PROB I didn't correctly add the pathing
     path('login', LoginAPIView.as_view()),
     path('user', UserAPIView.as_view()),
+    path('refresh', RefreshAPIView.as_view()),
 ]

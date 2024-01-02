@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 
-from core.authentication import JWTAuthentication, create_access_token
+from core.authentication import JWTAuthentication, create_access_token, create_refresh_token, decode_refresh_token
 
 from .serializers import UserSerializer
 
@@ -72,7 +72,7 @@ class LoginAPIView(APIView):
         
         # Once we get email and password we create an access token and refresh token
         access_token = create_access_token(user.id)
-        refresh_token = create_access_token(user.id)
+        refresh_token = create_refresh_token(user.id)
 
         # Returns will be different (create a variable)
         response = Response()
@@ -101,3 +101,19 @@ class UserAPIView(APIView):
     def get(self, request):
         return Response(UserSerializer(request.user).data)
        
+# Endpoint to refresh Bearer token if it's expired
+class RefreshAPIView(APIView):
+    def post(self, request):
+        # Get the refresh token from the cookies
+        refresh_token = request.COOKIES.get('refresh_token')
+
+        # Get the user id from decode_refresh_token
+        id = decode_refresh_token(refresh_token)
+
+        # Once we get id, get the access token
+        access_token = create_access_token(id)
+
+        # The Response will return token, and the new access token
+        return Response({
+            'token': access_token
+        })

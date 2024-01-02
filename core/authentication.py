@@ -55,6 +55,7 @@ def decode_access_token(token):
         raise exceptions.AuthenticationFailed('unauthenticated')
 
 
+# Create refresh access token
 def create_refresh_token(id):
     return jwt.encode({
         'user_id': id,
@@ -64,4 +65,11 @@ def create_refresh_token(id):
         'iat': datetime.datetime.utcnow()
     }, 'refresh_secret', algorithm='HS256')
 
-
+# Decode refresh acess token
+def decode_refresh_token(token):
+    try:
+        payload = jwt.decode(token, 'refresh_secret', algorithms='HS256')
+        return payload['user_id']
+    
+    except Exception:
+        raise exceptions.AuthenticationFailed('unauthenticated')
