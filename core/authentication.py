@@ -7,7 +7,7 @@ from rest_framework.authentication import BaseAuthentication, get_authorization_
 from .models import User
 
 
-# Create a middleware called JWTAuthentication and have it extend from BaseAuthentication
+# Create a middleware class called JWTAuthentication and have it extend from BaseAuthentication
 class JWTAuthentication(BaseAuthentication):
     # Get the headers and get the user and in the end we return the user
 
@@ -15,17 +15,16 @@ class JWTAuthentication(BaseAuthentication):
     def authenticate(self, request):
          # To get the access token we assign get_authorization_header to auth variable
         auth = get_authorization_header(request).split()
-
-        # Add an if condition where if auth is sent and the len is 2 then do the following
+        
+        # If auth is populated and the length in the array (Bearer and Token) is 2
         if auth and len(auth) == 2:
-            # Then we want to get the decoded token
+            # Decode the token
             token = auth[1].decode('utf-8')
-            
-            # pass the unicode token to the decode function
+            # Call the decode_access_token function and get the id of user
             id = decode_access_token(token)
-
+            # Return the entire user info
             user = User.objects.get(pk=id)
-
+            # Return a tuple
             return (user, None)
         
         raise exceptions.AuthenticationFailed('unauthenticated') 
@@ -45,7 +44,7 @@ def create_access_token(id):
         'iat': datetime.datetime.utcnow()
     }, 'access_secret', algorithm='HS256')
 
-
+# get access token which returns the id of the user after being decoded
 def decode_access_token(token):
     try:
         payload = jwt.decode(token, 'access_secret', algorithms='HS256')

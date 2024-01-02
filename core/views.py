@@ -94,7 +94,7 @@ class LoginAPIView(APIView):
 
 # Create the UserAPIView and have the APIView extend from it
 class UserAPIView(APIView):
-    # adding it on top means it will be a middleware
+    # This acts as a middleware by getting the headers and getting the user
     # we will in authentication.py ->
     authentication_classes = [JWTAuthentication]
 
