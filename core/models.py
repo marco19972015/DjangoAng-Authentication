@@ -18,3 +18,12 @@ class User(AbstractUser):
     # then we set the username_field equal to email (Specifies which model field is going to be used as the username)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+
+# To store our users token in the database
+class UserToken(models.Model):
+    user_id = models.IntegerField()
+    # Refresh token
+    token = models.CharField(max_length=255)
+    # auto_now_add so we automatically add the created date
+    created_at = models.DateTimeField(auto_now_add=True)
+    expired_at = models.DateTimeField()

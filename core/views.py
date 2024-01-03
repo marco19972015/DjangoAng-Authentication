@@ -1,3 +1,4 @@
+import datetime
 from django.shortcuts import render
 
 # To handle exception from the REST framework
@@ -16,7 +17,7 @@ from core.authentication import JWTAuthentication, create_access_token, create_r
 from .serializers import UserSerializer
 
 # Import to access the contents in models
-from .models import User
+from .models import User, UserToken
 
 # Create your views here.
 # Create view using the API view (extends from API view)
@@ -55,17 +56,10 @@ class LoginAPIView(APIView):
         # Filter where email is equal to email, and get the first value since our code doesn't know that the email is unique
         user = User.objects.filter(email=email).first()
 
-        # IMPORTANT to raise both exceptions because the user doesn't know if he put the wrong email or the wrong password
-
         # If we did not find the user 
         if user is None:
             # raise AuthFailed exception and let the user know (email)
             raise exceptions.AuthenticationFailed('Invalid Email')
-
-        # ISSUE BELOW, (WHEN I CHECK TO GET THE BOOLEAN IT IS NOT CORRECT)
-        # If the email is correct, now we check the password (We use a built in function check_password)
-        # if not user.check_password(password):
-        #     raise exceptions.AuthenticationFailed(f"password: {password}")
         
         if password != user.password:
             raise exceptions.AuthenticationFailed("Invalid Password")
@@ -73,6 +67,21 @@ class LoginAPIView(APIView):
         # Once we get email and password we create an access token and refresh token
         access_token = create_access_token(user.id)
         refresh_token = create_refresh_token(user.id)
+
+
+
+        # Assign attributesto UserToken model (When we log in, we create a user token value)
+        # (We need to add it here because when we refresh the token in RefreshAPIView class we will add another validation)
+        UserToken.objects.create(
+            user_id = user.id,
+            token = refresh_token,
+            # (We don't create a create_at since it is auto added)
+            expired_at = datetime.datetime.utcnow() + datetime.timedelta(days=30),
+        )
+
+
+
+
 
         # Returns will be different (create a variable)
         response = Response()
@@ -83,12 +92,6 @@ class LoginAPIView(APIView):
         response.data = {
             'token': access_token
         }
-    
-        # # We serialize the User (create)
-        # serializer = UserSerializer(user)
-
-        # # We return the data so we can see it
-        # return Response(serializer.data)
         return response
 
 
@@ -110,6 +113,16 @@ class RefreshAPIView(APIView):
         # Get the user id from decode_refresh_token
         id = decode_refresh_token(refresh_token)
 
+        # validation, if this value does not exist in the database
+        if not UserToken.objects.filter(
+            user_id = id,
+            token = refresh_token,
+            expired_at__gt=datetime.datetime.now(tz=datetime.timezone.utc)
+        ).exists():
+            # return an exception
+            raise exceptions.AuthenticationFailed('unauthenticated')
+            
+
         # Once we get id, get the access token
         access_token = create_access_token(id)
 
@@ -120,7 +133,12 @@ class RefreshAPIView(APIView):
 
 # log out endpoint
 class LogoutAPIView(APIView):
+
     def post(self, request):
+        # We get the authenticated user in request.user.id, when it's found delete it
+        refresh_token = request.COOKIES.get('refresh_token')
+        UserToken.objects.filter(token=refresh_token).delete()
+
         # To remove cookie we get the response
         response = Response()
         # delete the cookie with the key refresh_token
