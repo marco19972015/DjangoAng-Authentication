@@ -144,3 +144,11 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # Allows us to get both the access token and the refresh token located in cookies (in client side)
 CORS_ALLOW_CREDENTIALS = True
+
+
+# Seperating the EMAIL_HOST and EMAIL_PORT settings allows for flexibility and adaptability in different scenarios
+
+# Specify the hostname/IP address of the email server that we send emails to
+EMAIL_HOST = '0.0.0.0'
+# Specify the port number to be used when connecting to the email server
+EMAIL_PORT = '1025'

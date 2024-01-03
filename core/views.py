@@ -21,6 +21,8 @@ from .serializers import UserSerializer
 # Import to access the contents in models
 from .models import Reset, User, UserToken
 
+from django.core.mail import send_mail
+
 # Create your views here.
 # Create view using the API view (extends from API view)
 # This is the base class when we create an end point
@@ -153,15 +155,28 @@ class LogoutAPIView(APIView):
         # return the message in response
         return response
     
-class ResetAPIView(APIView):
+class ForgotAPIView(APIView):
     def post(self, request):
+        email = request.data['email']
         # generate a random string
         token = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(10))
 
         # Access the Reset model and create a new object with the email and token
         Reset.objects.create(
-            email = request.data['email'],
+            email = email,
             token = token
+        )
+
+        # For the message we need to provide the URL to send to the frontend (angular port)
+        url = 'http://localhost:4200/reset/' + token
+
+        # Function to send emails is called send_mail and needs to be imported from django.core.mail
+        send_mail(
+            subject = 'Reset your password!',
+            # %s will be substituted with url (I can also just use f-string)
+            message = 'Click <a href="%s">here</a>to reset your password' % url,
+            from_email='from@example.com',
+            recipient_list=[email]
         )
 
         return Response({
