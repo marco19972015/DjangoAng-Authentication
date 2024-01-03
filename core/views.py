@@ -1,4 +1,6 @@
 import datetime
+import random
+import string
 from django.shortcuts import render
 
 # To handle exception from the REST framework
@@ -17,7 +19,7 @@ from core.authentication import JWTAuthentication, create_access_token, create_r
 from .serializers import UserSerializer
 
 # Import to access the contents in models
-from .models import User, UserToken
+from .models import Reset, User, UserToken
 
 # Create your views here.
 # Create view using the API view (extends from API view)
@@ -150,3 +152,19 @@ class LogoutAPIView(APIView):
 
         # return the message in response
         return response
+    
+class ResetAPIView(APIView):
+    def post(self, request):
+        # generate a random string
+        token = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(10))
+
+        # Access the Reset model and create a new object with the email and token
+        Reset.objects.create(
+            email = request.data['email'],
+            token = token
+        )
+
+        return Response({
+            'message': 'success'
+        })
+    

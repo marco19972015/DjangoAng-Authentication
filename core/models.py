@@ -27,3 +27,10 @@ class UserToken(models.Model):
     # auto_now_add so we automatically add the created date
     created_at = models.DateTimeField(auto_now_add=True)
     expired_at = models.DateTimeField()
+
+# To reset password to generate token and store in the database
+class Reset(models.Model):
+    # When reseting password, we want to store user email and since a user can reset multiple times it should not be unique
+    email = models.CharField(max_length=255)
+    token = models.CharField(max_length=255, unique=True)
+ 
