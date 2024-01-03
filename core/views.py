@@ -51,6 +51,8 @@ class RegisterAPIView(APIView):
         # (urls.py in app -> urls.py in core -> views.py ))
         # return Response(request.data)
 
+
+# ISSUE HERE WHERE I'M COMPARING HASED VS UNHASHED PASSWORD
 class LoginAPIView(APIView):
     def post(self, request):
         # .data reminds of the object we pass from our template to our component when trying to access different objects in the DOM
@@ -65,14 +67,14 @@ class LoginAPIView(APIView):
             # raise AuthFailed exception and let the user know (email)
             raise exceptions.AuthenticationFailed('Invalid Email')
         
-        if password != user.password:
-            raise exceptions.AuthenticationFailed("Invalid Password")
+        # The password coming in is the encoded password
+        # since it was not being checked againts the has properly I was getting an error
+        if not user.check_password(password):
+            raise exceptions.AuthenticationFailed('Invalid password')
         
         # Once we get email and password we create an access token and refresh token
         access_token = create_access_token(user.id)
         refresh_token = create_refresh_token(user.id)
-
-
 
         # Assign attributesto UserToken model (When we log in, we create a user token value)
         # (We need to add it here because when we refresh the token in RefreshAPIView class we will add another validation)
@@ -82,9 +84,6 @@ class LoginAPIView(APIView):
             # (We don't create a create_at since it is auto added)
             expired_at = datetime.datetime.utcnow() + datetime.timedelta(days=30),
         )
-
-
-
 
 
         # Returns will be different (create a variable)
@@ -183,3 +182,34 @@ class ForgotAPIView(APIView):
             'message': 'success'
         })
     
+class ResetAPIView(APIView):
+    def post(self, request):
+        # Send the password confirm and token
+        data = request.data
+
+        # Validation on data for password
+        if data['password'] != data['password_confirm']:
+            raise exceptions.APIException('Passwords do not match!')
+        
+        # if password do match, access the Reset objects and filter by token, retrieve the first value
+        reset_password = Reset.objects.filter(token=data['token']).first()
+
+        # If password variable is not found then raise an exception
+        if not reset_password:
+            raise exceptions.APIException('Invalid link!')
+        
+        # If everything checks out then find the user, 
+        # where the email is equal to reset_password (contains email and token), return the first instance 
+        user = User.objects.filter(email=reset_password.email).first()
+
+        # if the user is not set, raise another exception 
+        if not user: 
+            raise exceptions.APIException('User not found!')
+        
+        # If all checks out
+        user.set_password(data['password'])
+        user.save()
+
+        return Response({
+            'message': 'success'
+        })
